@@ -102,6 +102,7 @@ namespace PlcSimMcpServer
             {
                 var tags = JsonSerializer.Deserialize<string[]>(tagNamesJson);
                 if (tags == null || tags.Length == 0) return "No tags provided.";
+                if (tags.Length > 500) return "Error: Maximum 500 tags allowed per batch to prevent context window overflow.";
 
                 var signals = tags.Select(t => new SDataValueByName { Name = t }).ToArray();
                 instance.ReadSignals(ref signals);
@@ -138,6 +139,7 @@ namespace PlcSimMcpServer
             {
                 var reqs = JsonSerializer.Deserialize<TagWriteRequest[]>(tagsJson);
                 if (reqs == null || reqs.Length == 0) return "No tags provided.";
+                if (reqs.Length > 500) return "Error: Maximum 500 tags allowed per batch to prevent context window overflow.";
 
                 var signals = new List<SDataValueByName>();
                 var sb = new StringBuilder();
