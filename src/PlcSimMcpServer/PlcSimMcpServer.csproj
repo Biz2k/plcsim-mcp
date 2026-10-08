@@ -18,8 +18,6 @@
       <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Management.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Siemens.Simatic.Simulation.Runtime.Api.x64">
-      <HintPath>C:\Users\Biz\Antigravity\LocalData\Siemens.Simatic.Simulation.Runtime.Api.x64.dll</HintPath>
-    </Reference>
+    <Reference Include="Siemens.Simatic.Simulation.Runtime.Api.x64" />
   </ItemGroup>
 </Project>

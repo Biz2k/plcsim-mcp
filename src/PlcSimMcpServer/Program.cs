@@ -13,6 +13,9 @@ namespace PlcSimMcpServer
     {
         public static async Task Main(string[] args)
         {
+            // Initialize PLCSIM API resolution dynamically before any tools are loaded
+            ApiResolver.Initialize();
+
             var options = CliOptions.ParseArgs(args);
 
             if (options.Doctor)
@@ -32,8 +35,9 @@ namespace PlcSimMcpServer
             Console.WriteLine("- 64-bit process: " + Environment.Is64BitProcess);
             
             try {
-                var asm = Assembly.LoadFrom(@"Libs\Siemens.Simatic.Simulation.Runtime.Api.x64.dll");
-                Console.WriteLine($"- PLCSIM Advanced API loaded successfully from: {asm.Location}");
+                // Just trigger a type load from the API to verify it resolves correctly
+                var version = Siemens.Simatic.Simulation.Runtime.SimulationRuntimeManager.Version;
+                Console.WriteLine($"- PLCSIM Advanced API loaded successfully. Version: {version}");
             } catch (Exception ex) {
                 Console.WriteLine($"- Failed to load PLCSIM Advanced API: {ex.Message}");
             }
