@@ -256,10 +256,11 @@ namespace PlcSimMcpServer
             return $"Instance '{instanceName}' not found.";
         }
 
-        [McpServerTool(Name = "plcsim_list_tags"), Description("List all tags available in the simulation")]
+        [McpServerTool(Name = "plcsim_list_tags"), Description("List tags available in the simulation (with pagination)")]
         public static string PlcSimListTags(
             [Description("Name of the instance")] string instanceName,
-            [Description("Maximum tags to return")] int limit = 100)
+            [Description("Offset (start index)")] int offset = 0,
+            [Description("Maximum tags to return")] int limit = 500)
         {
             var instance = SimulationRuntimeManager.CreateInterface(instanceName);
             if (instance != null)
@@ -267,7 +268,16 @@ namespace PlcSimMcpServer
                 instance.UpdateTagList();
                 var tags = instance.TagInfos;
                 if (tags == null || tags.Length == 0) return "No tags found.";
-                return string.Join("\n", tags.Take(limit).Select(t => $"- {t.Name} ({t.PrimitiveDataType})"));
+                
+                var selectedTags = tags.Skip(offset).Take(limit).ToArray();
+                string res = $"Showing {offset + 1} to {offset + selectedTags.Length} of {tags.Length} tags:\n";
+                res += string.Join("\n", selectedTags.Select(t => $"- {t.Name} ({t.PrimitiveDataType})"));
+                
+                if (offset + selectedTags.Length < tags.Length) 
+                {
+                    res += $"\n... (Use offset={offset + limit} to see more)";
+                }
+                return res;
             }
             return $"Instance '{instanceName}' not found.";
         }
