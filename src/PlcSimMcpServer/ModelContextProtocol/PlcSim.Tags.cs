@@ -18,6 +18,28 @@ namespace PlcSimMcpServer
             public string Type { get; set; }
         }
 
+        private static int ParseSiemensTime(string value)
+        {
+            if (int.TryParse(value, out int ms)) return ms;
+            
+            value = value.Replace("T#", "").Replace("t#", "").ToLowerInvariant();
+            TimeSpan ts = TimeSpan.Zero;
+            
+            var regex = new System.Text.RegularExpressions.Regex(@"(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m(?!s))?(?:(\d+)s)?(?:(\d+)ms)?");
+            var match = regex.Match(value);
+            if (match.Success && match.Length == value.Length)
+            {
+                int d = match.Groups[1].Success ? int.Parse(match.Groups[1].Value) : 0;
+                int h = match.Groups[2].Success ? int.Parse(match.Groups[2].Value) : 0;
+                int m = match.Groups[3].Success ? int.Parse(match.Groups[3].Value) : 0;
+                int s = match.Groups[4].Success ? int.Parse(match.Groups[4].Value) : 0;
+                int mls = match.Groups[5].Success ? int.Parse(match.Groups[5].Value) : 0;
+                ts = new TimeSpan(d, h, m, s, mls);
+                return (int)ts.TotalMilliseconds;
+            }
+            throw new ArgumentException("Invalid Siemens Time format. Use ms or formats like '10s', '1h20m'.");
+        }
+
         private static string FormatDataValue(SDataValue val)
         {
             switch (val.Type)
@@ -41,6 +63,11 @@ namespace PlcSimMcpServer
 
         private static SDataValue ParseDataValue(string value, string dataType)
         {
+            if (dataType.Equals("Time", StringComparison.OrdinalIgnoreCase))
+            {
+                return new SDataValue { Type = EPrimitiveDataType.Int32, Int32 = ParseSiemensTime(value) };
+            }
+
             if (!Enum.TryParse<EPrimitiveDataType>(dataType, true, out var eType))
                 throw new ArgumentException($"Invalid data type '{dataType}'");
 
@@ -58,12 +85,12 @@ namespace PlcSimMcpServer
                 case EPrimitiveDataType.UInt64: sdata.UInt64 = ulong.Parse(value); break;
                 case EPrimitiveDataType.Float: sdata.Float = float.Parse(value); break;
                 case EPrimitiveDataType.Double: sdata.Double = double.Parse(value); break;
-                default: throw new ArgumentException($"Writing for type '{dataType}' is not supported yet.");
+                default: throw new ArgumentException($"Writing for type '{dataType}' is not supported via SDataValue.");
             }
             return sdata;
         }
 
-        [McpServerTool(Name = "plcsim_batch_read"), Description("Read multiple simulation tags. Pass a JSON array of tag names: [\"Tag1\", \"Tag2\"]")]
+        [McpServerTool(Name = "plcsim_batch_read"), Description("Read multiple simulation tags. Pass JSON array of tag names: [\"Tag1\", \"Tag2\"]. Does not support String/WString.")]
         public static string PlcSimBatchRead(
             [Description("Name of the instance")] string instanceName,
             [Description("JSON array of tag names")] string tagNamesJson)
@@ -99,10 +126,10 @@ namespace PlcSimMcpServer
             }
         }
 
-        [McpServerTool(Name = "plcsim_batch_write"), Description("Write multiple simulation tags. Pass JSON array: [{\"Name\":\"T1\",\"Value\":\"true\",\"Type\":\"Bool\"}]")]
+        [McpServerTool(Name = "plcsim_batch_write"), Description("Write multiple simulation tags. Pass JSON array: [{\"Name\":\"T1\",\"Value\":\"10s\",\"Type\":\"Time\"}, {\"Name\":\"T2\",\"Value\":\"Hello\",\"Type\":\"String\"}]. The server automatically parses Siemens Time formats (like '10s' or '1m') into milliseconds, and handles String/WString natively.")]
         public static string PlcSimBatchWrite(
             [Description("Name of the instance")] string instanceName,
-            [Description("JSON array of tag objects")] string tagsJson)
+            [Description("JSON array of tag objects. Allowed types: Bool, Int32, Float, Time, String, WString, etc.")] string tagsJson)
         {
             var instance = SimulationRuntimeManager.CreateInterface(instanceName);
             if (instance == null) return $"Instance '{instanceName}' not found.";
@@ -113,29 +140,50 @@ namespace PlcSimMcpServer
                 if (reqs == null || reqs.Length == 0) return "No tags provided.";
 
                 var signals = new List<SDataValueByName>();
+                var sb = new StringBuilder();
+
                 foreach (var req in reqs)
                 {
-                    try {
-                        signals.Add(new SDataValueByName {
-                            Name = req.Name,
-                            DataValue = ParseDataValue(req.Value, req.Type)
-                        });
-                    } catch (Exception ex) {
-                        return $"Error parsing value for tag '{req.Name}': {ex.Message}";
+                    try 
+                    {
+                        if (req.Type.Equals("String", StringComparison.OrdinalIgnoreCase))
+                        {
+                            instance.WriteString(req.Name, req.Value);
+                            sb.AppendLine($"- {req.Name} = Successfully written (String)");
+                        }
+                        else if (req.Type.Equals("WString", StringComparison.OrdinalIgnoreCase))
+                        {
+                            instance.WriteWString(req.Name, req.Value);
+                            sb.AppendLine($"- {req.Name} = Successfully written (WString)");
+                        }
+                        else
+                        {
+                            signals.Add(new SDataValueByName {
+                                Name = req.Name,
+                                DataValue = ParseDataValue(req.Value, req.Type)
+                            });
+                        }
+                    } 
+                    catch (Exception ex) 
+                    {
+                        sb.AppendLine($"- {req.Name} = Error parsing/writing: {ex.Message}");
                     }
                 }
 
-                var sigArray = signals.ToArray();
-                instance.WriteSignals(ref sigArray);
-
-                var sb = new StringBuilder();
-                foreach (var sig in sigArray)
+                if (signals.Count > 0)
                 {
-                    if (sig.ErrorCode == ERuntimeErrorCode.OK)
-                        sb.AppendLine($"- {sig.Name} = Successfully written");
-                    else
-                        sb.AppendLine($"- {sig.Name} = Error: {sig.ErrorCode}");
+                    var sigArray = signals.ToArray();
+                    instance.WriteSignals(ref sigArray);
+
+                    foreach (var sig in sigArray)
+                    {
+                        if (sig.ErrorCode == ERuntimeErrorCode.OK)
+                            sb.AppendLine($"- {sig.Name} = Successfully written");
+                        else
+                            sb.AppendLine($"- {sig.Name} = Error: {sig.ErrorCode}");
+                    }
                 }
+                
                 return sb.ToString().TrimEnd();
             }
             catch (Exception ex)
@@ -144,15 +192,27 @@ namespace PlcSimMcpServer
             }
         }
 
-        [McpServerTool(Name = "plcsim_read_tag"), Description("Read the value of a single simulation tag")]
+        [McpServerTool(Name = "plcsim_read_tag"), Description("Read the value of a single simulation tag (including String, WString)")]
         public static string PlcSimReadTag(
             [Description("Name of the instance")] string instanceName,
-            [Description("Tag name (e.g. \"=201+?-QF1:11\")")] string tagName)
+            [Description("Tag name (e.g. \"=201+?-QF1:11\")")] string tagName,
+            [Description("Tag data type (required for String/WString, optional for others)")] string dataType = "")
         {
             var instance = SimulationRuntimeManager.CreateInterface(instanceName);
             if (instance != null)
             {
                 try {
+                    if (dataType.Equals("String", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string strVal = instance.ReadString(tagName);
+                        return $"Tag '{tagName}' (String) = {strVal}";
+                    }
+                    else if (dataType.Equals("WString", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string strVal = instance.ReadWString(tagName);
+                        return $"Tag '{tagName}' (WString) = {strVal}";
+                    }
+                    
                     var val = instance.Read(tagName);
                     return $"Tag '{tagName}' ({val.Type}) = {FormatDataValue(val)}"; 
                 } catch (Exception ex) {
@@ -162,19 +222,30 @@ namespace PlcSimMcpServer
             return $"Instance '{instanceName}' not found.";
         }
 
-        [McpServerTool(Name = "plcsim_write_tag"), Description("Write a value to a single simulation tag")]
+        [McpServerTool(Name = "plcsim_write_tag"), Description("Write a value to a single simulation tag. Server parses Time formats (e.g. '10s') automatically.")]
         public static string PlcSimWriteTag(
             [Description("Name of the instance")] string instanceName,
             [Description("Tag name")] string tagName,
-            [Description("Value to write (must match the tag's data type, e.g. true for Bool)")] string value,
-            [Description("Tag data type (e.g. Bool, Int32)")] string dataType = "Bool")
+            [Description("Value to write")] string value,
+            [Description("Tag data type (e.g. Bool, Int32, Time, String)")] string dataType = "Bool")
         {
             var instance = SimulationRuntimeManager.CreateInterface(instanceName);
             if (instance != null)
             {
                 try {
-                    var sdata = ParseDataValue(value, dataType);
-                    instance.Write(tagName, sdata);
+                    if (dataType.Equals("String", StringComparison.OrdinalIgnoreCase))
+                    {
+                        instance.WriteString(tagName, value);
+                    }
+                    else if (dataType.Equals("WString", StringComparison.OrdinalIgnoreCase))
+                    {
+                        instance.WriteWString(tagName, value);
+                    }
+                    else
+                    {
+                        var sdata = ParseDataValue(value, dataType);
+                        instance.Write(tagName, sdata);
+                    }
                     return $"Successfully wrote '{value}' to tag '{tagName}'.";
                 } catch (Exception ex) {
                     return $"Failed to write tag: {ex.Message}";
