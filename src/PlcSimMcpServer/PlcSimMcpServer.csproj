@@ -19,7 +19,7 @@
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Siemens.Simatic.Simulation.Runtime.Api.x64">
-      <HintPath>..\..\Libs\Siemens.Simatic.Simulation.Runtime.Api.x64.dll</HintPath>
+      <HintPath>C:\Users\Biz\Antigravity\LocalData\Siemens.Simatic.Simulation.Runtime.Api.x64.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>

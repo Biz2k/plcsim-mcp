@@ -80,29 +80,6 @@ namespace PlcSimMcpServer
             return string.Join("\n", instances.Select(i => $"- {i.Name}"));
         }
 
-        [McpServerTool(Name = "plcsim_set_instance_config"), Description("Configure settings of a PLCSim instance")]
-        public static string PlcSimSetInstanceConfig(
-            [Description("Name of the instance")] string instanceName,
-            [Description("IP Address")] string ipAddress = "",
-            [Description("Subnet Mask")] string subnetMask = "255.255.255.0",
-            [Description("Default Gateway")] string defaultGateway = "0.0.0.0")
-        {
-            var instance = SimulationRuntimeManager.CreateInterface(instanceName);
-            if (instance != null)
-            {
-                if (!string.IsNullOrEmpty(ipAddress))
-                {
-                    var suite = new SIPSuite4
-                    {
-                        IPAddress = new SIP { IPString = ipAddress },
-                        SubnetMask = new SIP { IPString = subnetMask },
-                        DefaultGateway = new SIP { IPString = defaultGateway }
-                    };
-                    instance.SetIPSuite(1u, suite, false);
-                }
-                return $"Instance '{instanceName}' configured with IP {ipAddress}.";
-            }
-            return $"Instance '{instanceName}' not found.";
-        }
+
     }
 }
