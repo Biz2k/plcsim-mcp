@@ -122,7 +122,21 @@ namespace PlcSimMcpServer
             return result;
         }
 
-        private static ServerSettings LoadSettings()
+        public static List<string> GetAvailableApiVersions()
+        {
+            var searchRoots = new[] { @"C:\Program Files\Siemens", @"C:\Program Files\Common Files\Siemens" };
+            var allPaths = new List<string>();
+            foreach (var root in searchRoots)
+            {
+                if (Directory.Exists(root))
+                {
+                    allPaths.AddRange(SafeGetFiles(root, "Siemens.Simatic.Simulation.Runtime.Api.x64.dll"));
+                }
+            }
+            return allPaths.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        }
+
+        public static ServerSettings LoadSettings()
         {
             if (File.Exists(SettingsFilePath))
             {
@@ -131,15 +145,12 @@ namespace PlcSimMcpServer
                     var json = File.ReadAllText(SettingsFilePath);
                     return JsonSerializer.Deserialize<ServerSettings>(json) ?? new ServerSettings();
                 }
-                catch
-                {
-                    // Ignore errors
-                }
+                catch { }
             }
             return new ServerSettings();
         }
 
-        private static void SaveSettings(ServerSettings settings)
+        public static void SaveSettings(ServerSettings settings)
         {
             try
             {
