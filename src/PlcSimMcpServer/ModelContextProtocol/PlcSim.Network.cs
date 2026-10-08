@@ -29,61 +29,70 @@ namespace PlcSimMcpServer
             return $"Error: Invalid network mode '{mode}'.";
         }
 
-        [McpServerTool(Name = "plcsim_set_instance_mapping"), Description("Map a PLC interface (e.g., IE1) to a PC network interface index")]
-        public static string PlcSimSetInstanceMapping(
+        [McpServerTool(Name = "plcsim_set_instance"), Description("Configure the network properties of a specific PLCSim instance")]
+        public static string PlcSimSetInstance(
             [Description("Name of the instance")] string instanceName,
-            [Description("PLC Interface (e.g., IE1, IE2)")] string plcInterface,
-            [Description("PC Interface Index (use 0 for Virtual Switch/TCPIPSingleAdapter)")] uint pcInterfaceIndex)
+            [Description("PLC Interface to map (e.g., IE1, IE2) (Optional)")] string plcInterface = null,
+            [Description("PC Interface Index to map to (use 0 for Virtual Switch/TCPIPSingleAdapter) (Optional)")] uint? pcInterfaceIndex = null,
+            [Description("Port ID to set IP for (e.g., 1 for X1) (Optional)")] uint? portId = null,
+            [Description("IP Address (e.g., 192.168.0.1) (Optional)")] string ipAddress = null,
+            [Description("Subnet Mask (e.g., 255.255.255.0) (Optional)")] string subnetMask = null,
+            [Description("Default Gateway (e.g., 0.0.0.0) (Optional)")] string defaultGateway = null)
         {
             var instance = SimulationRuntimeManager.CreateInterface(instanceName);
             if (instance == null) return $"Error: Instance '{instanceName}' not found.";
 
-            if (Enum.TryParse<EPLCInterface>(plcInterface, true, out var ePlcInterface))
+            string result = "";
+
+            if (!string.IsNullOrEmpty(plcInterface) && pcInterfaceIndex.HasValue)
             {
-                try 
+                if (Enum.TryParse<EPLCInterface>(plcInterface, true, out var ePlcInterface))
                 {
-                    instance.SetNetInterfaceMapping(ePlcInterface, pcInterfaceIndex);
-                    
-                    if (SimulationRuntimeManager.NetworkMode == ENetworkMode.TCPIPMultipleAdapter)
+                    try 
                     {
-                         SimulationRuntimeManager.SetNetInterfaceBindings(pcInterfaceIndex);
+                        instance.SetNetInterfaceMapping(ePlcInterface, pcInterfaceIndex.Value);
+                        if (SimulationRuntimeManager.NetworkMode == ENetworkMode.TCPIPMultipleAdapter)
+                        {
+                             SimulationRuntimeManager.SetNetInterfaceBindings(pcInterfaceIndex.Value);
+                        }
+                        result += $"Mapped {plcInterface} to PC interface {pcInterfaceIndex.Value}.\n";
                     }
-                    return $"Mapped {plcInterface} of '{instanceName}' to PC interface index {pcInterfaceIndex}.";
+                    catch (Exception ex)
+                    {
+                        result += $"Error mapping interface: {ex.Message}\n";
+                    }
+                }
+                else
+                {
+                    result += $"Error: Invalid PLC Interface '{plcInterface}'.\n";
+                }
+            }
+
+            if (portId.HasValue && !string.IsNullOrEmpty(ipAddress))
+            {
+                try
+                {
+                    var suite = new SIPSuite4
+                    {
+                        IPAddress = new SIP { IPString = ipAddress },
+                        SubnetMask = new SIP { IPString = string.IsNullOrEmpty(subnetMask) ? "255.255.255.0" : subnetMask },
+                        DefaultGateway = new SIP { IPString = string.IsNullOrEmpty(defaultGateway) ? "0.0.0.0" : defaultGateway }
+                    };
+                    instance.SetIPSuite(portId.Value, suite, true);
+                    result += $"Configured Port {portId.Value} with IP {ipAddress}.\n";
                 }
                 catch (Exception ex)
                 {
-                    return $"Error mapping interface: {ex.Message}";
+                    result += $"Error setting IP suite: {ex.Message}\n";
                 }
             }
-            return $"Error: Invalid PLC Interface '{plcInterface}'.";
-        }
 
-        [McpServerTool(Name = "plcsim_set_instance_ip"), Description("Configure the IP suite for a specific port of a PLCSim instance")]
-        public static string PlcSimSetInstanceIp(
-            [Description("Name of the instance")] string instanceName,
-            [Description("Port ID (e.g., 1 for X1)")] uint portId,
-            [Description("IP Address (e.g., 192.168.0.1)")] string ipAddress,
-            [Description("Subnet Mask (e.g., 255.255.255.0)")] string subnetMask = "255.255.255.0",
-            [Description("Default Gateway (e.g., 0.0.0.0)")] string defaultGateway = "0.0.0.0")
-        {
-            var instance = SimulationRuntimeManager.CreateInterface(instanceName);
-            if (instance == null) return $"Error: Instance '{instanceName}' not found.";
+            if (string.IsNullOrEmpty(result))
+            {
+                return "No configuration options were provided.";
+            }
 
-            try
-            {
-                var suite = new SIPSuite4
-                {
-                    IPAddress = new SIP { IPString = ipAddress },
-                    SubnetMask = new SIP { IPString = subnetMask },
-                    DefaultGateway = new SIP { IPString = defaultGateway }
-                };
-                instance.SetIPSuite(portId, suite, true);
-                return $"Instance '{instanceName}' Port {portId} configured with IP {ipAddress}.";
-            }
-            catch (Exception ex)
-            {
-                return $"Error setting IP suite: {ex.Message}";
-            }
+            return result.Trim();
         }
     }
 }

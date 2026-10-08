@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Text;
 using ModelContextProtocol.Server;
 using Siemens.Simatic.Simulation.Runtime;
 
@@ -58,28 +59,48 @@ namespace PlcSimMcpServer
             }
         }
 
-        [McpServerTool(Name = "plcsim_get_instance_config"), Description("Get configuration of a PLCSim instance")]
-        public static string PlcSimGetInstanceConfig() { return "Not implemented"; }
-
-        [McpServerTool(Name = "plcsim_get_instance_state"), Description("Get the current state of a PLCSim instance")]
-        public static string PlcSimGetInstanceState([Description("Name of the instance")] string instanceName)
-        {
-            var instance = SimulationRuntimeManager.CreateInterface(instanceName);
-            if (instance != null)
-            {
-                return $"State of '{instanceName}': {instance.OperatingState}";
-            }
-            return $"Instance '{instanceName}' not found.";
-        }
-
-        [McpServerTool(Name = "plcsim_list_instances"), Description("List all available PLCSim instances")]
-        public static string PlcSimListInstances()
+        [McpServerTool(Name = "plcsim_get_instances"), Description("Get a detailed list of all PLCSim instances including their states, mappings, and IP addresses")]
+        public static string PlcSimGetInstances()
         {
             var instances = SimulationRuntimeManager.RegisteredInstanceInfo;
             if (instances == null || instances.Length == 0) return "No instances found.";
-            return string.Join("\n", instances.Select(i => $"- {i.Name}"));
+            
+            var sb = new StringBuilder();
+            sb.AppendLine("Registered PLCSIM Instances:");
+            
+            foreach (var info in instances)
+            {
+                sb.AppendLine($"\n- Name: {info.Name}");
+                
+                try 
+                {
+                    var instance = SimulationRuntimeManager.CreateInterface(info.Name);
+                    sb.AppendLine($"  CPU Type: {instance.CPUType}");
+                    sb.AppendLine($"  State: {instance.OperatingState}");
+                    
+                    try {
+                        sb.AppendLine($"  IP: {instance.ControllerIP}");
+                    } catch { }
+                    
+                    try {
+                        var ipSuite = instance.ControllerIPSuite4; 
+                        if (ipSuite != null && ipSuite.Length > 0)
+                        {
+                            sb.AppendLine($"  IPSuite (Default): IP={ipSuite[0].IPAddress.IPString}, Mask={ipSuite[0].SubnetMask.IPString}, GW={ipSuite[0].DefaultGateway.IPString}");
+                        }
+                    } catch { }
+
+                    try {
+                        var mapping = instance.GetNetInterfaceMapping(EPLCInterface.IE1);
+                        sb.AppendLine($"  Mapping (IE1): PC Interface Index = {mapping}");
+                    } catch { }
+                }
+                catch (Exception ex)
+                {
+                    sb.AppendLine($"  [Error reading details: {ex.Message}]");
+                }
+            }
+            return sb.ToString().TrimEnd();
         }
-
-
     }
 }
