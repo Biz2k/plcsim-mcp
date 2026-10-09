@@ -34,10 +34,9 @@
   {
     "name": "plcsim_step_sync",
     "args": {
-      "instanceName": "SmokeTestPLC",
-      "timeoutMs": 1000
+      "instanceName": "SmokeTestPLC"
     },
-    "expect": "Successfully advanced",
+    "expect": "successfully advanced",
     "delayMs": 1000
   },
   {

@@ -139,8 +139,7 @@ namespace PlcSimMcpServer
 
         [McpServerTool(Name = "plcsim_step_sync"), Description("Advance the simulation to the next synchronization point in SingleStep mode.")]
         public static string PlcSimStepSync(
-            [Description("Name of the instance")] string instanceName,
-            [Description("Timeout in milliseconds (e.g., 5000)")] int timeoutMs = 5000)
+            [Description("Name of the instance")] string instanceName)
         {
             try
             {
@@ -155,14 +154,7 @@ namespace PlcSimMcpServer
                 }
 
                 // Advance simulation
-                if (timeoutMs > 0)
-                {
-                    instance.RunToNextSyncPoint((uint)timeoutMs, 0);
-                }
-                else
-                {
-                    instance.RunToNextSyncPoint();
-                }
+                instance.RunToNextSyncPoint();
 
                 return $"Simulation successfully advanced to the next sync point for '{instanceName}'.";
             }
