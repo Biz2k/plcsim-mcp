@@ -79,7 +79,8 @@ namespace PlcSimMcpServer
                         DefaultGateway = new SIP { IPString = string.IsNullOrEmpty(defaultGateway) ? "0.0.0.0" : defaultGateway }
                     };
                     instance.SetIPSuite(portId.Value, suite, true);
-                    result += $"Configured Port {portId.Value} with IP {ipAddress}.\n";
+                    string gwLog = suite.DefaultGateway.IPString == "0.0.0.0" ? "0.0.0.0 (will be replaced by IP address by PLCSIM)" : suite.DefaultGateway.IPString;
+                    result += $"Configured Port {portId.Value} with IP {ipAddress}, GW {gwLog}.\n";
                 }
                 catch (Exception ex)
                 {

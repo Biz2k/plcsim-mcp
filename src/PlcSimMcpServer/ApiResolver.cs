@@ -15,6 +15,8 @@ namespace PlcSimMcpServer
         public class ServerSettings
         {
             public string ApiDllPath { get; set; }
+            public string UiShortcutPath { get; set; } = @"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Siemens Automation\PLCSIM\S7-PLCSIM V21.lnk";
+            public string UiExecutablePath { get; set; } = @"C:\Program Files (x86)\Siemens\Automation\PLCSIMADV\bin\Siemens.Simatic.PlcSim.Advanced.UserInterface.exe";
         }
 
         public static void Initialize()
@@ -23,22 +25,22 @@ namespace PlcSimMcpServer
 
             if (string.IsNullOrEmpty(settings.ApiDllPath) || !File.Exists(settings.ApiDllPath))
             {
-                Console.WriteLine("PLCSIM Advanced API path not configured or invalid. Searching for installed versions...");
+                Console.Error.WriteLine("PLCSIM Advanced API path not configured or invalid. Searching for installed versions...");
                 settings.ApiDllPath = DetectAndSelectApi();
                 
                 if (settings.ApiDllPath != null)
                 {
                     SaveSettings(settings);
-                    Console.WriteLine($"Saved PLCSIM API path to settings: {settings.ApiDllPath}");
+                    Console.Error.WriteLine($"Saved PLCSIM API path to settings: {settings.ApiDllPath}");
                 }
                 else
                 {
-                    Console.WriteLine("WARNING: Could not find any compatible PLCSIM Advanced API installation!");
+                    Console.Error.WriteLine("WARNING: Could not find any compatible PLCSIM Advanced API installation!");
                 }
             }
             else
             {
-                Console.WriteLine($"Using PLCSIM API from settings: {settings.ApiDllPath}");
+                Console.Error.WriteLine($"Using PLCSIM API from settings: {settings.ApiDllPath}");
             }
 
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
@@ -49,7 +51,8 @@ namespace PlcSimMcpServer
             var searchRoots = new[]
             {
                 @"C:\Program Files\Siemens",
-                @"C:\Program Files\Common Files\Siemens"
+                @"C:\Program Files\Common Files\Siemens",
+                @"C:\Program Files (x86)\Common Files\Siemens"
             };
 
             var allPaths = new List<string>();
@@ -64,7 +67,7 @@ namespace PlcSimMcpServer
 
             if (allPaths.Count == 0) return null;
 
-            Console.WriteLine("Found following PLCSIM Advanced API versions:");
+            Console.Error.WriteLine("Found following PLCSIM Advanced API versions:");
             
             string bestPath = null;
             Version bestVersion = new Version(0, 0);
@@ -74,7 +77,7 @@ namespace PlcSimMcpServer
                 try
                 {
                     var info = FileVersionInfo.GetVersionInfo(path);
-                    Console.WriteLine($" - {info.FileVersion} at {path}");
+                    Console.Error.WriteLine($" - {info.FileVersion} at {path}");
                     var v = new Version(info.FileMajorPart, info.FileMinorPart, info.FileBuildPart, info.FilePrivatePart);
                     
                     if (v > bestVersion)
@@ -85,13 +88,13 @@ namespace PlcSimMcpServer
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($" - Error reading {path}: {ex.Message}");
+                    Console.Error.WriteLine($" - Error reading {path}: {ex.Message}");
                 }
             }
 
             if (bestPath != null)
             {
-                Console.WriteLine($"Selected optimal version: {bestVersion}");
+                Console.Error.WriteLine($"Selected optimal version: {bestVersion}");
             }
 
             return bestPath;
@@ -124,7 +127,7 @@ namespace PlcSimMcpServer
 
         public static List<string> GetAvailableApiVersions()
         {
-            var searchRoots = new[] { @"C:\Program Files\Siemens", @"C:\Program Files\Common Files\Siemens" };
+            var searchRoots = new[] { @"C:\Program Files\Siemens", @"C:\Program Files\Common Files\Siemens", @"C:\Program Files (x86)\Common Files\Siemens" };
             var allPaths = new List<string>();
             foreach (var root in searchRoots)
             {
@@ -159,7 +162,7 @@ namespace PlcSimMcpServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to save settings: {ex.Message}");
+                Console.Error.WriteLine($"Failed to save settings: {ex.Message}");
             }
         }
 

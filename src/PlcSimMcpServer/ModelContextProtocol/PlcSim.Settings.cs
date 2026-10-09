@@ -18,6 +18,8 @@ namespace PlcSimMcpServer
             
             sb.AppendLine("=== Current MCP Settings ===");
             sb.AppendLine($"ApiDllPath: {settings.ApiDllPath ?? "Not configured (will auto-detect)"}");
+            sb.AppendLine($"UiShortcutPath: {settings.UiShortcutPath}");
+            sb.AppendLine($"UiExecutablePath: {settings.UiExecutablePath}");
             if (!string.IsNullOrEmpty(settings.ApiDllPath) && File.Exists(settings.ApiDllPath))
             {
                 try {
@@ -57,22 +59,34 @@ namespace PlcSimMcpServer
             return sb.ToString();
         }
 
-        [McpServerTool(Name = "plcsim_set_mcp_settings"), Description("Update the MCP server settings (e.g. set a specific ApiDllPath)")]
+        [McpServerTool(Name = "plcsim_set_mcp_settings"), Description("Update the MCP server settings (e.g. set ApiDllPath or UI paths). Leave optional fields empty to keep their current values.")]
         public static string PlcSimSetMcpSettings(
-            [Description("Absolute path to Siemens.Simatic.Simulation.Runtime.Api.x64.dll to use")] string apiDllPath)
+            [Description("Absolute path to Siemens.Simatic.Simulation.Runtime.Api.x64.dll to use")] string apiDllPath = null,
+            [Description("Absolute path to S7-PLCSIM V21.lnk shortcut")] string uiShortcutPath = null,
+            [Description("Absolute path to Siemens.Simatic.PlcSim.Advanced.UserInterface.exe")] string uiExecutablePath = null)
         {
-            if (string.IsNullOrWhiteSpace(apiDllPath))
+            var settings = ApiResolver.LoadSettings();
+            
+            bool changed = false;
+            if (!string.IsNullOrWhiteSpace(apiDllPath))
             {
-                return "Error: apiDllPath cannot be empty.";
+                if (!File.Exists(apiDllPath)) return $"Error: The specified API file does not exist: {apiDllPath}";
+                settings.ApiDllPath = apiDllPath;
+                changed = true;
+            }
+            if (!string.IsNullOrWhiteSpace(uiShortcutPath))
+            {
+                settings.UiShortcutPath = uiShortcutPath;
+                changed = true;
+            }
+            if (!string.IsNullOrWhiteSpace(uiExecutablePath))
+            {
+                settings.UiExecutablePath = uiExecutablePath;
+                changed = true;
             }
 
-            if (!File.Exists(apiDllPath))
-            {
-                return $"Error: The specified file does not exist: {apiDllPath}";
-            }
-            
-            var settings = ApiResolver.LoadSettings();
-            settings.ApiDllPath = apiDllPath;
+            if (!changed) return "No settings were changed. Provide at least one argument.";
+
             ApiResolver.SaveSettings(settings);
 
             string ver = "Unknown";
@@ -80,7 +94,7 @@ namespace PlcSimMcpServer
                 ver = FileVersionInfo.GetVersionInfo(apiDllPath).FileVersion;
             } catch {}
 
-            return $"Settings updated successfully.\nNew ApiDllPath: {apiDllPath}\nVersion: {ver}\n\nNote: If the server is already running and has loaded the PLCSIM API, you must restart the MCP server for this change to take effect.";
+            return $"Settings updated successfully.\nNew ApiDllPath: {settings.ApiDllPath}\nNew UiShortcutPath: {settings.UiShortcutPath}\nNew UiExecutablePath: {settings.UiExecutablePath}\nVersion: {ver}\n\nNote: API changes require MCP restart.";
         }
     }
 }

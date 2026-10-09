@@ -1,0 +1,4 @@
+scratch/
+src/**/bin/
+src/**/obj/
+*.user

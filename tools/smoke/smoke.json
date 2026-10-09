@@ -1,0 +1,42 @@
+[
+  {
+    "name": "plcsim_create_instance",
+    "args": {
+      "instanceName": "SmokeTestPLC",
+      "cpuType": "CPU1500_Unspecified"
+    },
+    "expect": "created successfully",
+    "delayMs": 2000
+  },
+  {
+    "name": "plcsim_instance_control",
+    "args": {
+      "instanceName": "SmokeTestPLC",
+      "action": "PowerOn"
+    },
+    "expect": "Power on triggered",
+    "delayMs": 6000
+  },
+  {
+    "name": "plcsim_get_instances",
+    "args": {},
+    "expect": "SmokeTestPLC"
+  },
+  {
+    "name": "plcsim_instance_control",
+    "args": {
+      "instanceName": "SmokeTestPLC",
+      "action": "PowerOff"
+    },
+    "expect": "Power off triggered",
+    "delayMs": 5000
+  },
+  {
+    "name": "plcsim_delete_instance",
+    "args": {
+      "instanceName": "SmokeTestPLC"
+    },
+    "expect": "deleted",
+    "delayMs": 1000
+  }
+]

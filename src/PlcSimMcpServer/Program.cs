@@ -29,17 +29,17 @@ namespace PlcSimMcpServer
 
         public static void RunDoctor()
         {
-            Console.WriteLine("Diagnostics for PlcSimMcpServer:");
-            Console.WriteLine("- Working directory: " + Environment.CurrentDirectory);
-            Console.WriteLine("- CLR version: " + Environment.Version);
-            Console.WriteLine("- 64-bit process: " + Environment.Is64BitProcess);
+            Console.Error.WriteLine("Diagnostics for PlcSimMcpServer:");
+            Console.Error.WriteLine("- Working directory: " + Environment.CurrentDirectory);
+            Console.Error.WriteLine("- CLR version: " + Environment.Version);
+            Console.Error.WriteLine("- 64-bit process: " + Environment.Is64BitProcess);
             
             try {
                 // Just trigger a type load from the API to verify it resolves correctly
                 var version = Siemens.Simatic.Simulation.Runtime.SimulationRuntimeManager.Version;
-                Console.WriteLine($"- PLCSIM Advanced API loaded successfully. Version: {version}");
+                Console.Error.WriteLine($"- PLCSIM Advanced API loaded successfully. Version: {version}");
             } catch (Exception ex) {
-                Console.WriteLine($"- Failed to load PLCSIM Advanced API: {ex.Message}");
+                Console.Error.WriteLine($"- Failed to load PLCSIM Advanced API: {ex.Message}");
             }
         }
 
@@ -55,6 +55,8 @@ namespace PlcSimMcpServer
 
             builder.ConfigureServices((context, services) =>
             {
+                // Watchdog removed due to false positives
+                
                 services
                     .AddMcpServer(serverOptions =>
                     {

@@ -71,20 +71,21 @@ namespace PlcSimMcpServer
             if (!Enum.TryParse<EPrimitiveDataType>(dataType, true, out var eType))
                 throw new ArgumentException($"Invalid data type '{dataType}'");
 
+            var culture = System.Globalization.CultureInfo.InvariantCulture;
             var sdata = new SDataValue { Type = eType };
             switch (eType)
             {
                 case EPrimitiveDataType.Bool: sdata.Bool = bool.Parse(value); break;
-                case EPrimitiveDataType.Int8: sdata.Int8 = sbyte.Parse(value); break;
-                case EPrimitiveDataType.UInt8: sdata.UInt8 = byte.Parse(value); break;
-                case EPrimitiveDataType.Int16: sdata.Int16 = short.Parse(value); break;
-                case EPrimitiveDataType.UInt16: sdata.UInt16 = ushort.Parse(value); break;
-                case EPrimitiveDataType.Int32: sdata.Int32 = int.Parse(value); break;
-                case EPrimitiveDataType.UInt32: sdata.UInt32 = uint.Parse(value); break;
-                case EPrimitiveDataType.Int64: sdata.Int64 = long.Parse(value); break;
-                case EPrimitiveDataType.UInt64: sdata.UInt64 = ulong.Parse(value); break;
-                case EPrimitiveDataType.Float: sdata.Float = float.Parse(value); break;
-                case EPrimitiveDataType.Double: sdata.Double = double.Parse(value); break;
+                case EPrimitiveDataType.Int8: sdata.Int8 = sbyte.Parse(value, culture); break;
+                case EPrimitiveDataType.UInt8: sdata.UInt8 = byte.Parse(value, culture); break;
+                case EPrimitiveDataType.Int16: sdata.Int16 = short.Parse(value, culture); break;
+                case EPrimitiveDataType.UInt16: sdata.UInt16 = ushort.Parse(value, culture); break;
+                case EPrimitiveDataType.Int32: sdata.Int32 = int.Parse(value, culture); break;
+                case EPrimitiveDataType.UInt32: sdata.UInt32 = uint.Parse(value, culture); break;
+                case EPrimitiveDataType.Int64: sdata.Int64 = long.Parse(value, culture); break;
+                case EPrimitiveDataType.UInt64: sdata.UInt64 = ulong.Parse(value, culture); break;
+                case EPrimitiveDataType.Float: sdata.Float = float.Parse(value.Replace(",", "."), culture); break;
+                case EPrimitiveDataType.Double: sdata.Double = double.Parse(value.Replace(",", "."), culture); break;
                 default: throw new ArgumentException($"Writing for type '{dataType}' is not supported via SDataValue.");
             }
             return sdata;
@@ -139,10 +140,10 @@ namespace PlcSimMcpServer
             {
                 var reqs = JsonSerializer.Deserialize<TagWriteRequest[]>(tagsJson);
                 if (reqs == null || reqs.Length == 0) return "No tags provided.";
-                if (reqs.Length > 500) return "Error: Maximum 500 tags allowed per batch to prevent context window overflow.";
 
                 var signals = new List<SDataValueByName>();
-                var sb = new StringBuilder();
+                var errors = new List<string>();
+                int successCount = 0;
 
                 foreach (var req in reqs)
                 {
@@ -151,12 +152,12 @@ namespace PlcSimMcpServer
                         if (req.Type.Equals("String", StringComparison.OrdinalIgnoreCase))
                         {
                             instance.WriteString(req.Name, req.Value);
-                            sb.AppendLine($"- {req.Name} = Successfully written (String)");
+                            successCount++;
                         }
                         else if (req.Type.Equals("WString", StringComparison.OrdinalIgnoreCase))
                         {
                             instance.WriteWString(req.Name, req.Value);
-                            sb.AppendLine($"- {req.Name} = Successfully written (WString)");
+                            successCount++;
                         }
                         else
                         {
@@ -168,7 +169,7 @@ namespace PlcSimMcpServer
                     } 
                     catch (Exception ex) 
                     {
-                        sb.AppendLine($"- {req.Name} = Error parsing/writing: {ex.Message}");
+                        errors.Add($"- {req.Name} = Error parsing/writing: {ex.Message}");
                     }
                 }
 
@@ -180,13 +181,22 @@ namespace PlcSimMcpServer
                     foreach (var sig in sigArray)
                     {
                         if (sig.ErrorCode == ERuntimeErrorCode.OK)
-                            sb.AppendLine($"- {sig.Name} = Successfully written");
+                            successCount++;
                         else
-                            sb.AppendLine($"- {sig.Name} = Error: {sig.ErrorCode}");
+                            errors.Add($"- {sig.Name} = Error: {sig.ErrorCode}");
                     }
                 }
                 
-                return sb.ToString().TrimEnd();
+                var result = new StringBuilder();
+                result.AppendLine($"Successfully written {successCount} tags.");
+                if (errors.Count > 0)
+                {
+                    result.AppendLine($"Errors ({errors.Count}):");
+                    foreach (var err in errors.Take(50)) result.AppendLine(err);
+                    if (errors.Count > 50) result.AppendLine($"... and {errors.Count - 50} more errors.");
+                }
+                
+                return result.ToString().TrimEnd();
             }
             catch (Exception ex)
             {

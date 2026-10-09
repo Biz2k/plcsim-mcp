@@ -38,3 +38,7 @@ Use clear, actionable language. For example:
 - Preserve existing indentation style (spaces).
 - Do not modify file encodings; keep UTF-8 BOM where present.
 - Ensure Windows CRLF line endings are retained when editing files.
+
+## PLCSIM Workflow Rules
+
+- **CONTEXT FIRST RULE:** When interacting with the MCP server, always check the current state first (e.g., using `plcsim_get_instances`). If there is an existing PLCSIM window running (started by the user or previously via MCP), you MUST read what instances are already there and work within that existing context.
