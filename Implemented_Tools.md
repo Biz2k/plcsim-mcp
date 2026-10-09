@@ -17,6 +17,7 @@
 - `plcsim_get_system_time`: Получить текущее системное время виртуального ПЛК.
 - `plcsim_set_operating_mode`: Установка режима симуляции (Default или SingleStep).
 - `plcsim_get_operating_mode`: Чтение текущего режима симуляции.
+- `plcsim_step_sync`: Продвижение симуляции до следующей точки синхронизации (используется в режиме SingleStep).
 
 ## Настройка сети
 - `plcsim_set_global_network_mode`: Выбор режима глобальной сети симулятора (Local / VirtualEthernetAdapter).

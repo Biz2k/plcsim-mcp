@@ -23,8 +23,8 @@
 - Реализовать инструмент `plcsim_set_operating_mode` для переключения между обычным режимом (`Default`) и пошаговым выполнением (`SingleStep`).
 - Инструменты: `plcsim_set_operating_mode`, `plcsim_get_operating_mode`.
 
-**Шаг 3: Точки синхронизации (Sync Points) [В ОЧЕРЕДИ]**
-- Реализовать инструмент `plcsim_step_sync` (вызов `RunToNextSyncPoint()`).
+**Шаг 3: Точки синхронизации (Sync Points) [ВЫПОЛНЕНО]**
+- Реализован инструмент `plcsim_step_sync` (вызов `RunToNextSyncPoint()`).
 - Позволяет продвигать симуляцию шаг за шагом в режиме Co-Simulation (ожидая внешние физические расчеты).
 
 **Шаг 4: Аппаратные прерывания и диагностика (Hardware Events) [В ОЧЕРЕДИ]**

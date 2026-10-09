@@ -136,5 +136,40 @@ namespace PlcSimMcpServer
                 return $"Error getting operating mode: {ex.Message}";
             }
         }
+
+        [McpServerTool(Name = "plcsim_step_sync"), Description("Advance the simulation to the next synchronization point in SingleStep mode.")]
+        public static string PlcSimStepSync(
+            [Description("Name of the instance")] string instanceName,
+            [Description("Timeout in milliseconds (e.g., 5000)")] int timeoutMs = 5000)
+        {
+            try
+            {
+                if (!SimulationRuntimeManager.RegisteredInstanceInfo.Any(i => i.Name.Equals(instanceName, StringComparison.OrdinalIgnoreCase)))
+                    return $"Failed: Instance '{instanceName}' does not exist.";
+
+                using var instance = SimulationRuntimeManager.CreateInterface(instanceName);
+
+                if (instance.OperatingMode.ToString().StartsWith("Default"))
+                {
+                    return "Error: Instance must be in a SingleStep mode to use step sync.";
+                }
+
+                // Advance simulation
+                if (timeoutMs > 0)
+                {
+                    instance.RunToNextSyncPoint((uint)timeoutMs, 0);
+                }
+                else
+                {
+                    instance.RunToNextSyncPoint();
+                }
+
+                return $"Simulation successfully advanced to the next sync point for '{instanceName}'.";
+            }
+            catch (Exception ex)
+            {
+                return $"Error executing step sync: {ex.Message}";
+            }
+        }
     }
 }
