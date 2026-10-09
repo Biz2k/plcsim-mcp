@@ -23,6 +23,40 @@
     "expect": "SmokeTestPLC"
   },
   {
+    "name": "plcsim_set_operating_mode",
+    "args": {
+      "instanceName": "SmokeTestPLC",
+      "operatingMode": "SingleStep"
+    },
+    "expect": "Operating mode successfully set to SingleStep_C",
+    "delayMs": 1000
+  },
+  {
+    "name": "plcsim_step_sync",
+    "args": {
+      "instanceName": "SmokeTestPLC",
+      "timeoutMs": 1000
+    },
+    "expect": "Successfully advanced",
+    "delayMs": 1000
+  },
+  {
+    "name": "plcsim_get_process_events",
+    "args": {
+      "instanceName": "DoesNotExist"
+    },
+    "expect": "does not exist"
+  },
+  {
+    "name": "plcsim_trigger_event",
+    "args": {
+      "instanceName": "DoesNotExist",
+      "eventType": "Process",
+      "hardwareId": 50
+    },
+    "expect": "does not exist"
+  },
+  {
     "name": "plcsim_instance_control",
     "args": {
       "instanceName": "SmokeTestPLC",

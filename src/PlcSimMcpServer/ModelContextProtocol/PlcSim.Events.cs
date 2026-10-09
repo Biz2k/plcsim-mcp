@@ -4,11 +4,11 @@ using System.Linq;
 using ModelContextProtocol.Server;
 using Siemens.Simatic.Simulation.Runtime;
 
-namespace PlcSimMcpServer.ModelContextProtocol
+namespace PlcSimMcpServer
 {
-    public static class PlcSimEvents
+    public static partial class PlcSimServer
     {
-        [McpServerTool(Name = "plcsim_get_process_events"), Description("Get a list of all configured process events (Hardware Interrupts) in the PLC.")]
+        [McpServerTool(Name = "plcsim_get_process_events"), Description("DANGER: Calling this on a PLC without a downloaded Hardware Configuration will crash the entire MCP server! Get a list of all configured process events (Hardware Interrupts) in the PLC.")]
         public static string PlcSimGetProcessEvents(
             [Description("Name of the instance")] string instanceName)
         {
@@ -35,14 +35,14 @@ namespace PlcSimMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "plcsim_trigger_event"), Description("Trigger a hardware event (Process Event, Pull/Plug, or Alarm) in the PLC.")]
+        [McpServerTool(Name = "plcsim_trigger_event"), Description("DANGER: Passing an invalid hardwareId will crash the entire MCP server! Trigger a hardware event (Process Event, Pull/Plug, or Alarm) in the PLC.")]
         public static string PlcSimTriggerEvent(
             [Description("Name of the instance")] string instanceName,
             [Description("Type of the event: 'Process', 'PullPlug', or 'Alarm'")] string eventType,
             [Description("Hardware Identifier (System Constant) of the module")] ushort hardwareId,
             [Description("Optional: Channel number (for ProcessEvent or Alarm)")] ushort channel = 0,
             [Description("Optional: Process Event Type (e.g., RisingEdge, FallingEdge). Default is RisingEdge")] string processType = "RisingEdge",
-            [Description("Optional: Pull/Plug Event Type (e.g., ModulePulled, ModulePlugged, WrongModulePlugged). Default is ModulePulled")] string pullPlugType = "ModulePulled")
+            [Description("Optional: Pull/Plug Event Type (e.g., Pull, Plug, PlugWrongModule). Default is Pull")] string pullPlugType = "Pull")
         {
             try
             {

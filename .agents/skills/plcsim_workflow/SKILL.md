@@ -49,7 +49,23 @@ When requested to create, deploy, or run a PLCSIM instance so that TIA Portal ca
 [ ] Powered On?
 [ ] (Optional) IP Configured?
 
-*Note: In the future, these steps will be consolidated into a single `plcsim_deploy_instance` tool.*
+*Note: The steps above are mostly automated by the `plcsim_deploy_instance` tool.*
+
+## Simulation Modes & Time Synchronization
+To step the PLC simulation manually (e.g. for co-simulation):
+1. **Set Operating Mode:** Change from `Default` to `SingleStep`.
+   - `plcsim_set_operating_mode(instanceName: "MyPLC", mode: "SingleStep")`
+2. **Step the PLC:** Use `plcsim_step_sync` to advance the simulation time (default is 1 cycle if time is not specified).
+   - `plcsim_step_sync(instanceName: "MyPLC", timeMs: 10)`
+
+## Diagnostics & Events (Hardware Interrupts)
+PLCSIM Advanced API supports triggering events natively without going through variables.
+**🚨 DANGER:** You must ONLY call event tools on a PLC that has a valid hardware configuration downloaded via TIA Portal. Calling these on an empty or factory-fresh PLC will result in an unmanaged Access Violation that crashes the entire MCP Server process!
+1. **Get Configured Events:**
+   - `plcsim_get_process_events(instanceName: "MyPLC")` - Returns all OB40 hardware interrupts.
+2. **Trigger an Event:**
+   - `plcsim_trigger_event(instanceName: "MyPLC", eventType: "Process", hardwareId: 260)`
+   - Supported types: `Process` (OB40), `PullPlug` (OB83), `Alarm` (OB82).
 
 ## ⚠️ Known Issues & API Instability
 - **UI Freeze / Crash on Rapid API Calls:** Performing bulk operations on instances (especially rapid creation or deletion of multiple instances) while the graphical `Siemens.Simatic.PlcSim.Advanced.UserInterface` is open can cause a race condition in the UI's event loop, leading to a freeze. **RULE:** Do not perform mass operations rapidly. Enforce a minimum delay of 500ms between instance state changes or deletions.
