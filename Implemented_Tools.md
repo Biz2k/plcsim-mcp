@@ -15,6 +15,8 @@
 - `plcsim_get_scale_factor`: Получить текущий множитель времени.
 - `plcsim_set_system_time`: Установить системное время виртуального ПЛК.
 - `plcsim_get_system_time`: Получить текущее системное время виртуального ПЛК.
+- `plcsim_set_operating_mode`: Установка режима симуляции (Default или SingleStep).
+- `plcsim_get_operating_mode`: Чтение текущего режима симуляции.
 
 ## Настройка сети
 - `plcsim_set_global_network_mode`: Выбор режима глобальной сети симулятора (Local / VirtualEthernetAdapter).

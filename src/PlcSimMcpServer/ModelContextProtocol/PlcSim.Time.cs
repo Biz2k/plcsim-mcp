@@ -91,5 +91,45 @@ namespace PlcSimMcpServer
                 return $"Error getting system time: {ex.Message}";
             }
         }
+
+        [McpServerTool(Name = "plcsim_set_operating_mode"), Description("Set the operating mode of the virtual PLC (Default or SingleStep). SingleStep is required for manual step execution.")]
+        public static string PlcSimSetOperatingMode(
+            [Description("Name of the instance")] string instanceName,
+            [Description("Operating Mode ('Default' or 'SingleStep')")] string operatingMode)
+        {
+            try
+            {
+                if (!SimulationRuntimeManager.RegisteredInstanceInfo.Any(i => i.Name.Equals(instanceName, StringComparison.OrdinalIgnoreCase)))
+                    return $"Failed: Instance '{instanceName}' does not exist.";
+
+                if (!Enum.TryParse<EOperatingMode>(operatingMode, true, out var eMode))
+                    return $"Error: Invalid operating mode '{operatingMode}'. Use 'Default' or 'SingleStep'.";
+
+                using var instance = SimulationRuntimeManager.CreateInterface(instanceName);
+                instance.OperatingMode = eMode;
+                return $"Operating mode successfully set to {eMode} for instance '{instanceName}'.";
+            }
+            catch (Exception ex)
+            {
+                return $"Error setting operating mode: {ex.Message}";
+            }
+        }
+
+        [McpServerTool(Name = "plcsim_get_operating_mode"), Description("Get the current operating mode of the virtual PLC.")]
+        public static string PlcSimGetOperatingMode([Description("Name of the instance")] string instanceName)
+        {
+            try
+            {
+                if (!SimulationRuntimeManager.RegisteredInstanceInfo.Any(i => i.Name.Equals(instanceName, StringComparison.OrdinalIgnoreCase)))
+                    return $"Failed: Instance '{instanceName}' does not exist.";
+
+                using var instance = SimulationRuntimeManager.CreateInterface(instanceName);
+                return $"Operating mode for '{instanceName}': {instance.OperatingMode}";
+            }
+            catch (Exception ex)
+            {
+                return $"Error getting operating mode: {ex.Message}";
+            }
+        }
     }
 }

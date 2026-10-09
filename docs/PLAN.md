@@ -19,8 +19,9 @@
 - Реализованы инструменты `plcsim_set_scale_factor` / `plcsim_get_scale_factor` для управления скоростью симуляции.
 - Реализованы инструменты `plcsim_set_system_time` / `plcsim_get_system_time` для работы со временем ПЛК.
 
-**Шаг 2: Режимы симуляции (Operating Mode) [В ОЧЕРЕДИ]**
+**Шаг 2: Режимы симуляции (Operating Mode) [ВЫПОЛНЕНО]**
 - Реализовать инструмент `plcsim_set_operating_mode` для переключения между обычным режимом (`Default`) и пошаговым выполнением (`SingleStep`).
+- Инструменты: `plcsim_set_operating_mode`, `plcsim_get_operating_mode`.
 
 **Шаг 3: Точки синхронизации (Sync Points) [В ОЧЕРЕДИ]**
 - Реализовать инструмент `plcsim_step_sync` (вызов `RunToNextSyncPoint()`).
