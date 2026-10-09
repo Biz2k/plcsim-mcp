@@ -5,8 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.2.0] - 2026-10-10
 ### Added
 - Time management tools (`plcsim_set_scale_factor`, `plcsim_get_scale_factor`, `plcsim_set_system_time`, `plcsim_get_system_time`) for manipulating simulation virtual time.
+- Simulation modes and synchronization tools (`plcsim_set_operating_mode`, `plcsim_step_sync`).
+- Diagnostics and events handling tools (`plcsim_get_process_events`, `plcsim_trigger_event`).
 - `plcsim_get_supported_cpus` tool to list available CPU models for instance creation.
 - `plcsim_data_types` AI skill documenting how to handle primitives, BCD, Strings, Times, Arrays, and Structs.
 
