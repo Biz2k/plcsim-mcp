@@ -102,8 +102,13 @@ namespace PlcSimMcpServer
                 if (!SimulationRuntimeManager.RegisteredInstanceInfo.Any(i => i.Name.Equals(instanceName, StringComparison.OrdinalIgnoreCase)))
                     return $"Failed: Instance '{instanceName}' does not exist.";
 
+                if (operatingMode.Equals("SingleStep", StringComparison.OrdinalIgnoreCase))
+                {
+                    operatingMode = "SingleStep_C";
+                }
+
                 if (!Enum.TryParse<EOperatingMode>(operatingMode, true, out var eMode))
-                    return $"Error: Invalid operating mode '{operatingMode}'. Use 'Default' or 'SingleStep'.";
+                    return $"Error: Invalid operating mode '{operatingMode}'. Valid modes: {string.Join(", ", Enum.GetNames(typeof(EOperatingMode)))}";
 
                 using var instance = SimulationRuntimeManager.CreateInterface(instanceName);
                 instance.OperatingMode = eMode;
