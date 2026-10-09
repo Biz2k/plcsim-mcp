@@ -10,6 +10,12 @@
 ## Управление состоянием
 - `plcsim_instance_control`: Управление состоянием виртуального контроллера (поддерживает действия `PowerOn`, `PowerOff`, `Run`, `Stop`, `MemoryReset`).
 
+## Управление временем (Time Management)
+- `plcsim_set_scale_factor`: Ускорение или замедление виртуального времени (Virtual Time Scaling).
+- `plcsim_get_scale_factor`: Получить текущий множитель времени.
+- `plcsim_set_system_time`: Установить системное время виртуального ПЛК.
+- `plcsim_get_system_time`: Получить текущее системное время виртуального ПЛК.
+
 ## Настройка сети
 - `plcsim_set_global_network_mode`: Выбор режима глобальной сети симулятора (Local / VirtualEthernetAdapter).
 - `plcsim_get_pc_interfaces`: Получить список доступных сетевых адаптеров хоста.

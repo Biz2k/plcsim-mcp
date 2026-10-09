@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+### Added
+- Time management tools (`plcsim_set_scale_factor`, `plcsim_get_scale_factor`, `plcsim_set_system_time`, `plcsim_get_system_time`) for manipulating simulation virtual time.
+- `plcsim_get_supported_cpus` tool to list available CPU models for instance creation.
+- `plcsim_data_types` AI skill documenting how to handle primitives, BCD, Strings, Times, Arrays, and Structs.
+
 ## [0.1.0] - 2026-10-09
 ### Added
 - Initial extraction of `PlcSimMcpServer` from `tiaportal-mcp` repository.
