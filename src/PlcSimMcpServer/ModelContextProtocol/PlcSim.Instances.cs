@@ -9,10 +9,48 @@ namespace PlcSimMcpServer
 {
     public static partial class PlcSimServer
     {
+        [McpServerTool(Name = "plcsim_get_supported_cpus"), Description("Get a categorized list of all supported CPU types for plcsim_create_instance")]
+        public static string PlcSimGetSupportedCpus()
+        {
+            return @"Поддерживаемые типы процессоров (ECPUType) для plcsim_create_instance:
+
+S7-1500 (Обычные, F-безопасные, Компактные и Технологические)
+- Универсальный: CPU1500_Unspecified (самый частый вариант по умолчанию)
+- Стандартные: CPU1511, CPU1513, CPU1515, CPU1516, CPU1517, CPU1518
+- F (Fail-safe): CPU1511F, CPU1513F, CPU1515F, CPU1516F, CPU1517F, CPU1518F
+- C (Compact): CPU1511C, CPU1512C
+- T / TF (Technology): CPU1511T, CPU1515T, CPU1516T, CPU1517T, CPU1518T, CPU1511TF, CPU1515TF, CPU1516TF, CPU1517TF, CPU1518TF
+- ODK / MFP: CPU1518ODK, CPU1518FODK, CPU1518MFP, CPU1518FMFP
+
+Станции распределенной периферии (ET200SP / ET200PRO)
+- Универсальные: ET200SP_Unspecified, ET200PRO_Unspecified
+- ET200SP: CPU1510SP, CPU1512SP, CPU1514SP, CPU1510SPF, CPU1512SPF, CPU1514SPF, CPU1514SPT, CPU1514SPTF
+- ET200PRO: CPU1513PRO, CPU1516PRO, CPU1513PROF, CPU1516PROF
+
+Резервированные / High-Availability (R/H)
+- Универсальный: CPU1500_RH_Unspecified
+- Модели: CPU1513R, CPU1515R, CPU1517H, CPU1518HF
+
+Программные контроллеры (Software Controllers / Open Controller)
+- Универсальный: CPU1500_SW_OC_Unspecified
+- Модели: CPU1505SP, CPU1507S, CPU1508S, CPU1505SPF, CPU1507SF, CPU1508SF, CPU1505SPT, CPU1508ST, CPU1505SPTF, CPU1508STF
+
+SINUMERIK (ЧПУ)
+- Универсальный: CPU1500_SINUMERIK_Unspecified
+- Модели: SINUMERIK_MCU1720, SINUMERIK_NCU1740, SINUMERIK_NCU1750, SINUMERIK_NCU1760, SINUMERIK_PPU1740
+
+S7-1200 (Только для версий PLCSIM V21+)
+- Универсальный: CPU1200G2_Unspecified
+- Модели: CPU1212C_DCDCDC, CPU1212C_DCDCRLY, CPU1212C_ACDCRLY, CPU1214C_DCDCDC, CPU1214C_DCDCRLY, CPU1214C_ACDCRLY
+- F (Fail-safe): CPU1212FC_DCDCDC, CPU1212FC_DCDCRLY, CPU1214FC_DCDCDC, CPU1214FC_DCDCRLY
+- Прочие: CPU1216, CPU1217
+- Дополнительно (Drive Controller): CPU1504DTF, CPU1507DTF, CPU1514PA";
+        }
+
         [McpServerTool(Name = "plcsim_create_instance"), Description("Create a new PLCSim virtual controller instance")]
         public static string PlcSimCreateInstance(
             [Description("Name of the instance")] string instanceName,
-            [Description("CPU type (e.g. CPU1500_Unspecified)")] string cpuType = "CPU1500_Unspecified")
+            [Description("CPU type. Call plcsim_get_supported_cpus for a full list.")] string cpuType = "CPU1500_Unspecified")
         {
             try
             {
