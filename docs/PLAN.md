@@ -27,9 +27,10 @@
 - Реализован инструмент `plcsim_step_sync` (вызов `RunToNextSyncPoint()`).
 - Позволяет продвигать симуляцию шаг за шагом в режиме Co-Simulation (ожидая внешние физические расчеты).
 
-**Шаг 4: Аппаратные прерывания и диагностика (Hardware Events) [В ОЧЕРЕДИ]**
-- Реализовать инструмент `plcsim_trigger_event` для генерации системных событий.
+**Шаг 4: Аппаратные прерывания и диагностика (Hardware Events) [ВЫПОЛНЕНО]**
+- Реализован инструмент `plcsim_trigger_event` для генерации системных событий.
 - Методы API: `ProcessEvent` (Hardware Interrupt, OB40), `AlarmNotification` (Diagnostics, OB82), `PullOrPlugEvent` (вытащить/вставить модуль).
+- Добавлен инструмент `plcsim_get_process_events` для получения сконфигурированных прерываний.
 
 ## ⚠️ Известные проблемы (Known Issues)
 - **Зависание UI при работе через API (Ghost State):** Выполнение частых вызовов к API при открытом графическом окне `PLCSIM Advanced User Interface` может вызвать состояние гонки. 
