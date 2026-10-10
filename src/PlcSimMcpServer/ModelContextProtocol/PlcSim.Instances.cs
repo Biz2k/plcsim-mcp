@@ -141,10 +141,8 @@ S7-1200 (Только для версий PLCSIM V21+)
                 var instance = SimulationRuntimeManager.RegisterInstance(eCpuType, instanceName);
                 logAction($"[SUCCESS] Instance '{instanceName}' created.");
 
-                // 4. Map Interface (Virtual Switch = 0)
-                uint pcInterfaceIndex = 0;
-                instance.SetNetInterfaceMapping(EPLCInterface.IE1, pcInterfaceIndex);
-                logAction($"[SUCCESS] Mapped IE1 to PC interface {pcInterfaceIndex}.");
+                // 4. Interface mapping not needed for Softbus / Default
+                logAction($"[SUCCESS] Network mode is set to {eMode}.");
 
                 // 5. Power ON
                 instance.PowerOn();
