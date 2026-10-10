@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -48,8 +47,7 @@ namespace PlcSimMcpProxy
                 // Capture initialize message to replay on crash
                 try
                 {
-                    using var doc = JsonDocument.Parse(line);
-                    if (doc.RootElement.TryGetProperty("method", out var methodProp) && methodProp.GetString() == "initialize")
+                    if (line.Contains("\"method\"") && line.Contains("\"initialize\""))
                     {
                         _initMessage = line;
                     }
@@ -150,15 +148,8 @@ namespace PlcSimMcpProxy
         {
             try
             {
-                var payload = new
-                {
-                    jsonrpc = "2.0",
-                    method = method,
-                    params_ = new { message = message } // Note: MCP might expect different params schema, but this is a debug fallback
-                };
-                
-                var json = JsonSerializer.Serialize(payload).Replace("params_", "params");
-                var bytes = System.Text.Encoding.UTF8.GetBytes(json + "\n");
+                var json = "{\"jsonrpc\":\"2.0\",\"method\":\"" + method + "\",\"params\":{\"message\":\"" + message + "\"}}\n";
+                var bytes = System.Text.Encoding.UTF8.GetBytes(json);
                 using var stdout = Console.OpenStandardOutput();
                 stdout.Write(bytes, 0, bytes.Length);
                 stdout.Flush();
