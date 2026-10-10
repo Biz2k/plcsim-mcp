@@ -141,13 +141,19 @@ S7-1200 (Только для версий PLCSIM V21+)
                 var instance = SimulationRuntimeManager.RegisterInstance(eCpuType, instanceName);
                 logAction($"[SUCCESS] Instance '{instanceName}' created.");
 
-                // 4. Interface mapping not needed for Softbus / Default
-                logAction($"[SUCCESS] Network mode is set to {eMode}.");
+                // 4. Map Interface (Virtual Switch) - Wrap in try/catch because some modes/versions auto-map
+                try {
+                    uint pcInterfaceIndex = 0;
+                    instance.SetNetInterfaceMapping(EPLCInterface.IE1, pcInterfaceIndex);
+                    logAction($"[SUCCESS] Mapped IE1 to PC interface {pcInterfaceIndex}.");
+                } catch (Exception ex) {
+                    logAction($"[WARN] Skipping mapping: {ex.Message}");
+                }
 
                 // 5. Power ON
                 instance.PowerOn();
                 logAction($"[SUCCESS] Power On triggered for '{instanceName}'.");
-                System.Threading.Thread.Sleep(2000); // Give it a moment to boot
+                System.Threading.Thread.Sleep(4000); // Give it more time to boot
 
                 // 6. Set IP Address
                 if (!string.IsNullOrEmpty(ipAddress))
@@ -158,9 +164,13 @@ S7-1200 (Только для версий PLCSIM V21+)
                         SubnetMask = new SIP { IPString = subnetMask },
                         DefaultGateway = new SIP { IPString = defaultGateway }
                     };
-                    instance.SetIPSuite(0, suite, true); // Port 0 for X1
-                    string gwLog = defaultGateway == "0.0.0.0" ? "0.0.0.0 (will be replaced by IP address by PLCSIM)" : defaultGateway;
-                    logAction($"[SUCCESS] Configured X1 (Port 0) with IP {ipAddress}, Mask {subnetMask}, GW {gwLog}.");
+                    try {
+                        instance.SetIPSuite(0, suite, true); // Port 0 for X1
+                        string gwLog = defaultGateway == "0.0.0.0" ? "0.0.0.0 (will be replaced by IP address by PLCSIM)" : defaultGateway;
+                        logAction($"[SUCCESS] Configured X1 (Port 0) with IP {ipAddress}, Mask {subnetMask}, GW {gwLog}.");
+                    } catch (Exception ex) {
+                        logAction($"[WARN] Could not set IP Suite (it might be set via TIA Portal): {ex.Message}");
+                    }
                 }
 
                 logAction($"\nDeployment complete. TIA Portal can now discover '{instanceName}'.");
